@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">DeliveryApp</string>
+    <string name="product">product description</string>
+    <string name="api_error_repos">Error Calling API!! Check if the internet is connected.</string>
+    <string name="item_description">Item Description</string>
+    <string name="icon">icon</string>
+</resources>
