@@ -52,29 +52,9 @@ Room is used as an ORM tool to interact between the java and the SQL Lite world.
 ![hockeyapp distribution](./doc-img/hockeyapp-publish-link.JPG)
 
 ## Code walkthrough
-The data is fetched page by page as long as there is a page that exists from the service API. This is done in the RemoteDataSource class.
-```java
-//RemoteDataSource.java
-   public void fetch(int id, int pageSize) {
-        Call<List<Repo>> repoCall = repoService.getRepositories(id, pageSize);
-        repoCall.enqueue(new Callback<List<Repo>>() {
-            @Override
-            public void onResponse(Call<List<Repo>> call, Response<List<Repo>> response) {
-                mError.setValue(false);
-                mDataApi.setValue(RepoEnityModelMapper.transformModelsToEntities(response.body()));
 
-            }
-
-            @Override
-            public void onFailure(Call<List<Repo>> call, Throwable t) {
-                mError.setValue(true);
-            }
-        });
-    }
-```
-
-It fetches 20 items per fetch and loads the pages on demand as the user reaches the end of the scroll in the recycler view. 
-This is handled in the recycler view's onScrollListener. 
+The app fetches 20 items per fetch and loads the pages on demand as the user reaches the end of the scroll in the recycler view. 
+This is handled in the recycler view's onScrollListener by calling fetchRepos method on the viewmodel object. 
 ```java
  listView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -99,5 +79,67 @@ This is handled in the recycler view's onScrollListener.
             }
         });
 ```
+The viewmodel in turn relies on the DeliveryRepository to fetch the repos.
+```java
+//DeliveriesViewModel.java
+  public void fetchRepos(Integer id, Integer items) {
+        deliveryRepository.fetch(id, items);
+
+    }
+```
+The DeliveryRepositotyImpl first queries the LocalDataSource (which queries the RoomDB) if the data already exists. 
+
+```java
+//DeliveryRepositoryImpl.java
+@Override
+    public void fetch(int id, int pageSize) {
+        mLoadingMerger.setValue(true);
+        mExecutor.execute(() -> {
+            List<RepoEntity> repos = mLocalDataSource.fetchByRange(id, pageSize);
+
+            if (repos != null && repos.size() > 0) {
+                mDataMerger.postValue(RepoEnityModelMapper.transformEntitiesToModels(mLocalDataSource.getAll()));
+                mLoadingMerger.postValue(false);
+            } else {
+                mRemoteDataSource.fetch(id, pageSize);
+            }
+        });
+
+    }
+```
+The LocalDataSource looks in to the DB if the data exists for the range specified.
+```java
+public List<RepoEntity> fetchByRange(int id, int pageSize) {
+        List<RepoEntity> repos = mDb.repoDao().getRepoByRange(id, pageSize);
+        return repos;
+    }
+
+```
+
+If not, then the data is fetched via the API call in the RemoteDataSource class.
+```java
+//RemoteDataSource.java
+   public void fetch(int id, int pageSize) {
+        Call<List<Repo>> repoCall = repoService.getRepositories(id, pageSize);
+        repoCall.enqueue(new Callback<List<Repo>>() {
+            @Override
+            public void onResponse(Call<List<Repo>> call, Response<List<Repo>> response) {
+                mError.setValue(false);
+                mDataApi.setValue(RepoEnityModelMapper.transformModelsToEntities(response.body()));
+
+            }
+
+            @Override
+            public void onFailure(Call<List<Repo>> call, Throwable t) {
+                mError.setValue(true);
+            }
+        });
+    }
+```
+
+The API call in the RemoteDataSource code snippet shown above, is persisted in the local storage(SQL Lite via Room) and posted to the observers via mDataMerger.post(list) call as shown in the code snippet below.
+
+"mDataMerger" is an observable LiveData object. So, as soon as it recieves an update it broadcasts the same to all the observers.
+
 
 # Contact: sunragav@gmail.com Mobile: +91 8655444565
