@@ -38,7 +38,8 @@ public class DeliveryRepositoryImpl implements DeliveryRepository {
         mDataMerger.addSource(this.mRemoteDataSource.getDataStream(), entities ->
                 mExecutor.execute(() -> {
                     mLoadingMerger.postValue(true);
-                    mLocalDataSource.writeData(entities);
+                    if (entities != null && entities.size() > 0)
+                        mLocalDataSource.writeData(entities);
                 })
         );
         mErrorMerger.addSource(mRemoteDataSource.getErrorStream(), error -> mExecutor.execute(() -> {
