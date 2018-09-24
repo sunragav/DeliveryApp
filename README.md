@@ -42,10 +42,8 @@ Room is used as an ORM tool to interact between the java and the SQL Lite world.
 ![nevercode.io 3](./doc-img/nevercode3.JPG)
 ### Build log
 ![nevercode.io 3](./doc-img/nevercode4.JPG)
-### Build succeeds
-![nevercode.io 4](./doc-img/nevercode5.JPG)
 ### Build Artefacts
-![nevercode.io 5](./doc-img/nevercode6.JPG)
+![nevercode.io 4](./doc-img/nevercode5.JPG)
 ### Get API Key from the HockeyApp console for distributing the app automatically after build.
 ![hockeyapp distribution](./doc-img/hockey-API-Key.jpg)
 ### Automatic publishing configuration in the nevercode.io using the API key of the HockeyApp.
