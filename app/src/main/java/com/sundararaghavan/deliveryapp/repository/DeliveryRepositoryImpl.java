@@ -94,18 +94,6 @@ public class DeliveryRepositoryImpl implements DeliveryRepository {
 
     }
 
-    public void fetchByRange(int id, int pageSize) {
-        mLoadingMerger.setValue(true);
-        LiveData<List<RepoEntity>> repos = mLocalDataSource.fetch(id, pageSize);
-
-        if (repos != null && repos.getValue() != null && repos.getValue().size() > 0) {
-            mDataMerger.setValue(RepoEnityModelMapper.transformEntitiesToModels(mLocalDataSource.getAll()));
-            mLoadingMerger.setValue(false);
-        } else {
-            mRemoteDataSource.fetch(id, pageSize);
-        }
-
-    }
     @Override
     public void clear() {
         mLocalDataSource.clearData();

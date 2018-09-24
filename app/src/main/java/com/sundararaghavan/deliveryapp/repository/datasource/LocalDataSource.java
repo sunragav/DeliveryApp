@@ -24,10 +24,6 @@ public class LocalDataSource implements DataSource<List<RepoEntity>> {
         return mDb.repoDao().getAllReposLive();
     }
 
-    public LiveData<List<RepoEntity>> fetch(int id, int pageSize) {
-        LiveData<List<RepoEntity>> repos = mDb.repoDao().getRepo(id, pageSize);
-        return repos;
-    }
 
     public List<RepoEntity> fetchByRange(int id, int pageSize) {
         List<RepoEntity> repos = mDb.repoDao().getRepoByRange(id, pageSize);
