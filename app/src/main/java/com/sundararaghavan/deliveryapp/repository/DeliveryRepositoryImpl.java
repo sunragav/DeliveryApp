@@ -36,7 +36,10 @@ public class DeliveryRepositoryImpl implements DeliveryRepository {
 
         );
         mDataMerger.addSource(this.mRemoteDataSource.getDataStream(), entities ->
-                mExecutor.execute(() -> mLocalDataSource.writeData((List<RepoEntity>) entities))
+                mExecutor.execute(() -> {
+                    mLoadingMerger.postValue(true);
+                    mLocalDataSource.writeData(entities);
+                })
         );
         mErrorMerger.addSource(mRemoteDataSource.getErrorStream(), error -> mExecutor.execute(() -> {
 
@@ -77,14 +80,32 @@ public class DeliveryRepositoryImpl implements DeliveryRepository {
 
     @Override
     public void fetch(int id, int pageSize) {
+        mLoadingMerger.setValue(true);
+        mExecutor.execute(() -> {
+            List<RepoEntity> repos = mLocalDataSource.fetchByRange(id, pageSize);
 
-        if (!mLocalDataSource.fetch(id, pageSize)) {
-            mLoadingMerger.setValue(true);
+            if (repos != null && repos.size() > 0) {
+                mDataMerger.postValue(RepoEnityModelMapper.transformEntitiesToModels(mLocalDataSource.getAll()));
+                mLoadingMerger.postValue(false);
+            } else {
+                mRemoteDataSource.fetch(id, pageSize);
+            }
+        });
+
+    }
+
+    public void fetchByRange(int id, int pageSize) {
+        mLoadingMerger.setValue(true);
+        LiveData<List<RepoEntity>> repos = mLocalDataSource.fetch(id, pageSize);
+
+        if (repos != null && repos.getValue() != null && repos.getValue().size() > 0) {
+            mDataMerger.setValue(RepoEnityModelMapper.transformEntitiesToModels(mLocalDataSource.getAll()));
+            mLoadingMerger.setValue(false);
+        } else {
             mRemoteDataSource.fetch(id, pageSize);
         }
 
     }
-
     @Override
     public void clear() {
         mLocalDataSource.clearData();

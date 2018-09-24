@@ -21,8 +21,11 @@ public interface RepoDao {
     @Query("SELECT * FROM repodb")
     List<RepoEntity> getAllRepos();
 
-    @Query("SELECT * FROM repodb where id BETWEEN :id AND :id+:pageSize ")
+    @Query("SELECT * FROM repodb where id >= :id AND id<(:id+:pageSize) ")
     LiveData<List<RepoEntity>> getRepo(int id, int pageSize);
+
+    @Query("SELECT * FROM repodb where id >= :id AND id<(:id+:pageSize) ")
+    List<RepoEntity> getRepoByRange(int id, int pageSize);
 
     @Query("SELECT * FROM repodb WHERE id=:id")
     LiveData<RepoEntity> getRepo(String id);
